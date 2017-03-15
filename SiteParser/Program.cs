@@ -1,28 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net;
+using SiteParser.Application.Loader;
+using SiteParser.Application.Sitemap;
 
 namespace SiteParser
 {
     class Program
     {
+
+        private static bool _closeProgram = false;
+
         static void Main(string[] args)
         {
+            var site = new Uri(args[0]);
+            var savePath = args[1].ToString();
 
-            string domainUrl = "http://www.velosite.local:3114";
-            WebClient wClient = new WebClient();
-            wClient.BaseAddress = domainUrl;
-            string htmlContent = wClient.DownloadString("/");
-            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-            doc.LoadHtml(htmlContent);
-            foreach( HtmlAgilityPack.HtmlNode node in doc.DocumentNode.SelectNodes("//a[@href]"))
-            {
-                Console.WriteLine(node.Attributes["href"].Value);
-            }
-            Console.ReadKey();
+            SiteSpiderLoader spider = new SiteSpiderLoader(site);
+            SiteMapService sitemap = new SiteMapService(savePath);
+            // Set events
+            spider.onPageLoad += sitemap.appendPage;
+            spider.onParseEnd += sitemap.saveSiteMap;
+            sitemap.onSiteMapCreated += closeProgram;
+            //Parse site
+            spider.parse();
+            while (_closeProgram == false) { }
+        }
+
+        public static void closeProgram()
+        {
+            _closeProgram = true;
         }
     }
 }

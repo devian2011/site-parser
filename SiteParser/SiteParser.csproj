@@ -46,16 +46,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Application\Loader\HtmlPage.cs" />
+    <Compile Include="Application\Loader\PageDownloadService.cs" />
+    <Compile Include="Application\Loader\HtmlInternalLinkFinder.cs" />
+    <Compile Include="Application\Loader\SiteSpiderLoader.cs" />
+    <Compile Include="Application\Loader\ParallelExecution.cs" />
+    <Compile Include="Application\Sitemap\SaveTransport.cs" />
+    <Compile Include="Application\Sitemap\SiteMapService.cs" />
+    <Compile Include="Application\Sitemap\SiteModels.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\Parser\SiteMap\SiteMapRowModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Services\Loader\" />
+    <Folder Include="Application\Configuration\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
