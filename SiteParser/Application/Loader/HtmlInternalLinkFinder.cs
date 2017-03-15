@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
+using SiteParser.Application.Loader.Rules;
 
 namespace SiteParser.Application.Loader
 {
 
     class HtmlInternalLinkFinder
     {
-        protected Uri _baseUrl;
-        protected SelfSiteLinkGetter _internalLinkFilter;
+        protected Uri _domain;
+        protected List<ILinkRule> _rules;
 
-        public HtmlInternalLinkFinder(Uri domainUrl)
+
+        public HtmlInternalLinkFinder(Uri domain, List<ILinkRule> rule = null)
         {
-            _baseUrl = domainUrl;
-            _internalLinkFilter = new SelfSiteLinkGetter(domainUrl);
+            _domain = domain;
+            _rules = rule == null ? new List<ILinkRule>() : rule;
         }
 
         public List<Uri> getLinks(string htmlContent)
@@ -25,66 +27,63 @@ namespace SiteParser.Application.Loader
             var nodes = hDoc.DocumentNode.SelectNodes("//a[@href]");
             foreach (HtmlNode node in nodes)
             {
-                var link = _internalLinkFilter.getter(node.Attributes["href"].Value);
-                if (link.isLink && link.isInternal)
+                var link = node.Attributes["href"].Value;
+
+                //Check that link is a link to source and not # or javascript::void(0) and etc
+                if (!isLink(link)) continue;
+
+                //Replace double // to main request http scheme
+                link = Regex.Replace(link, @"^\/\/", _domain.Scheme + "://");
+                var url = isLinkAbsolute(link)
+                    ? new Uri(link)
+                    : new Uri(_domain, link);
+                //Check that link is allowed to add
+                if( isLinkAllowed(url) )
                 {
-                    urls.Add(link.url);
+                    urls.Add(url);
                 }
             }
-
             return urls;
         }
 
-    }
-
-    /// <summary>
-    /// Link data object
-    /// </summary>
-    class Link
-    {
-        public bool isLink;
-        public bool isInternal;
-        public Uri url;
-    }
-
-    class SelfSiteLinkGetter
-    {
-        protected Uri _domain;
-
-        public SelfSiteLinkGetter(Uri domainName)
-        {
-            _domain = domainName;
-        }
-
-
-        public Link getter(string url)
+        /// <summary>
+        /// Check that link is a link to source and not # or javascript::void(0) and etc
+        /// </summary>
+        /// <param name="link"></param>
+        /// <returns></returns>
+        public bool isLink(string link)
         {
             var isLink = new Regex(@"^(http:|https:|\/{1,2})");
-            //Check url is not javascript:void(0), # or another specials tags
-            if (isLink.IsMatch(url))
-            {
-                var isAbsoluteLink = new Regex(@"^(http:|https:|\/\/)");
-                if (isAbsoluteLink.IsMatch(url))
-                {
-                    url = Regex.Replace(url, @"^\/\/", _domain.Scheme + "://");
-                    var isInternalLink = new Regex(@"" + _domain.Host + "\\/");
-                    if (isInternalLink.IsMatch(url))
-                    {
-                        return new Link { isLink = true, isInternal = true, url = new Uri(url) };
-                    }
-                    else
-                    {
-                        return new Link { isLink = true, isInternal = false, url = new Uri(url) };
-                    }
-                }
-                else
-                {
-                    return new Link { isLink = true, isInternal = true, url = new Uri(_domain, url) };
-                }
-
-            }
-
-            return new Link { isLink = false };
+            return isLink.IsMatch(link);
         }
+
+        /// <summary>
+        /// Walk on all filters and check that link is allow to parse
+        /// </summary>
+        /// <param name="link"></param>
+        /// <returns></returns>
+        public bool isLinkAllowed(Uri link)
+        {
+            foreach(var rule in _rules)
+            {
+                if (!rule.allow(link))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Check that link is absolute
+        /// </summary>
+        /// <param name="link"></param>
+        /// <returns></returns>
+        public bool isLinkAbsolute(string link)
+        {
+            var isAbsoluteLink = new Regex(@"^(http:|https:|\/\/)");
+            return isAbsoluteLink.IsMatch(link);
+        }
+
     }
 }

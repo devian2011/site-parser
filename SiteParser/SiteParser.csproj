@@ -49,6 +49,10 @@
     <Compile Include="Application\Loader\HtmlPage.cs" />
     <Compile Include="Application\Loader\PageDownloadService.cs" />
     <Compile Include="Application\Loader\HtmlInternalLinkFinder.cs" />
+    <Compile Include="Application\Loader\Rules\ILinkRule.cs" />
+    <Compile Include="Application\Loader\Rules\NoHashesRule.cs" />
+    <Compile Include="Application\Loader\Rules\RobotsRules.cs" />
+    <Compile Include="Application\Loader\Rules\SelfLinkRule.cs" />
     <Compile Include="Application\Loader\SiteSpiderLoader.cs" />
     <Compile Include="Application\Loader\ParallelExecution.cs" />
     <Compile Include="Application\Sitemap\SaveTransport.cs" />

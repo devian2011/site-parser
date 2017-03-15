@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using SiteParser.Application.Loader.Rules;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,13 +34,13 @@ namespace SiteParser.Application.Loader
         /// 
         /// </summary>
         /// <param name="siteUrl"></param>
-        public SiteSpiderLoader(Uri siteUrl)
+        public SiteSpiderLoader(Uri siteUrl, List<ILinkRule> rules = null)
         {
             _domain = siteUrl;
             _urlCollection = new ConcurrentQueue<string>();
             _viewedUrls = new ConcurrentDictionary<string, int>();
             _errorCounter = new ConcurrentDictionary<string, int>();
-            _linkFinder = new HtmlInternalLinkFinder(_domain);
+            _linkFinder = new HtmlInternalLinkFinder(_domain, rules);
         }
 
         /// <summary>
@@ -51,6 +52,7 @@ namespace SiteParser.Application.Loader
             parseAdditionalPages();
             onParseEnd();
         }
+        
         /// <summary>
         /// Parse main page of domain
         /// </summary>
